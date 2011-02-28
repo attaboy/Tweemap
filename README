@@ -1,1 +1,8 @@
 Shearwater treemap generator v1.0
+written by Luke Andrews <la@twitter.com>
+Copyright (C) 2011 Twitter, Inc.
+Licensed under an MIT license http://www.opensource.org/licenses/mit-license.php
+
+Uses algorithms described in:
+  "Squarified Treemaps", by Mark Bruls, Kees Huizing, and Jarke J. van Wijk
+  http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.36.6685&rep=rep1&type=pdf

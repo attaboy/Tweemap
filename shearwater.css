@@ -2,15 +2,16 @@
 
 .shearwaterTreemapContainer {
   position: relative;
-  border: 3px solid black;
-  font-family: Optima;
+  border: 2px solid #808080;
+  font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  font-weight: 200;
+  color: white;
 }
 
 .shearwaterTreemapArea {
   position: absolute;
   overflow: hidden;
   background-color: #808080;
-  color: white;
   outline: 1px solid white;
 }
 

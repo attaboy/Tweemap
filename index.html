@@ -11,19 +11,57 @@
 
 </div>
 <script>
-var data = {
-  'USA': 250,
-  'CAD': 150,
-  'GBR': 120,
-  'AUS': 80,
-  'NZL': 50,
-  'IRE': 50,
-  'IND': 30,
-  'FOO': 20
-};
+var data = [{
+  name: 'USA',
+  value: 250,
+  children: []
+}, {
+  name: 'CAD',
+  value: 150,
+  children: []
+}, {
+  name: 'GBR',
+  value: 120,
+  children: []
+}, {
+  name: 'AUS',
+  value: 80,
+  children: []
+}, {
+  name: 'NZL',
+  value: 50,
+  children: []
+}, {
+  name: 'IRE',
+  value: 50,
+  children: []
+}, {
+  name: 'IND',
+  value: 30,
+  children: []
+}, {
+  name: 'FOO',
+  value: 20,
+  children: []
+}];
 
 var map = new Shearwater($('#treemap'))
   .setData(data)
+  .setWidthAndHeight(500, 500)
+  .setColorCallback(function(i) {
+    switch (i % 5) {
+      case 0:
+        return '#0B648A';
+      case 1:
+        return '#228DBC';
+      case 2:
+        return '#34A1D0';
+      case 3:
+        return '#4EB7E5';
+      default:
+        return '#61CFFE';
+    }
+  })
   .render();
 </script>
 </body>

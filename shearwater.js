@@ -1,6 +1,9 @@
 // Shearwater: a treemap generator v1.0
 // written by Luke Andrews <la@twitter.com>
-// uses algorithms described in:
+// Copyright (C) 2011 Twitter, Inc.
+// Licensed under an MIT license http://www.opensource.org/licenses/mit-license.php
+//
+// Uses algorithms described in:
 //   "Squarified Treemaps", by Mark Bruls, Kees Huizing, and Jarke J. van Wijk
 //   http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.36.6685&rep=rep1&type=pdf
 
@@ -17,7 +20,18 @@ var Shearwater = function($outerContainer) {
   return this;
 };
 
-Shearwater.prototype.setDimensions = function(width, height) {
+Shearwater.prototype.getColorForIndex = function(i) {
+  return '#808080';
+};
+
+Shearwater.prototype.setColorCallback = function(func) {
+  if (typeof func === 'function') {
+    this.getColorForIndex = func;
+  }
+  return this;
+};
+
+Shearwater.prototype.setWidthAndHeight = function(width, height) {
   this.width = width;
   this.height = height;
   return this;
@@ -28,24 +42,21 @@ Shearwater.prototype.getArea = function() {
 };
 
 Shearwater.prototype.setData = function(data) {
+  var self = this;
   var total = 0;
-  for (var k in data) {
-    if (data.hasOwnProperty(k)) {
-      total += data[k];
-    }
-  }
+  var totalArea = this.getArea();
+  data.forEach(function(item) { total += item.value; });
   if (!total) {
     return this;
   }
-  for (k in data) {
-    if (data.hasOwnProperty(k)) {
-      this.data.push({
-        name: k,
-        actual: data[k],
-        area: data[k]/total * this.getArea()
-      });
-    }
-  }
+  this.data = [];
+  data.forEach(function(item) {
+    self.data.push({
+      name: item.name,
+      actual: item.value,
+      area: item.value/total * totalArea
+    });
+  });
   return this;
 };
 
@@ -130,16 +141,18 @@ Shearwater.prototype.draw = function(stack) {
     width: this.width + 'px',
     height: this.height + 'px'
   });
-  stack.forEach(function(item) {
-    var $label = $('<div class="shearwaterTreemapLabel"/>');
-    $label.append(item.name + ' (' + item.actual + ')');
+  stack.forEach(function(item, i) {
+    var $label = $('<div class="shearwaterTreemapLabel"/>')
+      .append(item.name + ' (' + item.actual + ')');
 
-    $('<div class="shearwaterTreemapArea"/>')
+    item.element = $('<div class="shearwaterTreemapArea"/>')
       .css({
         left: item.x + 'px',
         top: item.y + 'px',
         width: item.width + 'px',
-        height: item.height + 'px'
+        height: item.height + 'px',
+        background: self.getColorForIndex(i)
+
       })
       .append($label)
       .appendTo(self.innerContainer);

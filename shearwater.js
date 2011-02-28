@@ -7,7 +7,7 @@
 // JSHint commands:
 /*global $: true */
 
-var Treemap = function($outerContainer) {
+var Shearwater = function($outerContainer) {
   this.outerContainer = $outerContainer;
   this.data = [];
   this.width = 500;
@@ -17,17 +17,17 @@ var Treemap = function($outerContainer) {
   return this;
 };
 
-Treemap.prototype.setDimensions = function(width, height) {
+Shearwater.prototype.setDimensions = function(width, height) {
   this.width = width;
   this.height = height;
   return this;
 };
 
-Treemap.prototype.getArea = function() {
+Shearwater.prototype.getArea = function() {
   return this.width * this.height;
 };
 
-Treemap.prototype.setData = function(data) {
+Shearwater.prototype.setData = function(data) {
   var total = 0;
   for (var k in data) {
     if (data.hasOwnProperty(k)) {
@@ -49,13 +49,13 @@ Treemap.prototype.setData = function(data) {
   return this;
 };
 
-Treemap.prototype.farthestFrom1 = function(a, b) {
+Shearwater.prototype.farthestFrom1 = function(a, b) {
   var aDiff = a < 1 ? 1 - a : a - 1;
   var bDiff = b < 1 ? 1 - b : b - 1;
   return aDiff > bDiff ? a : b;
 };
 
-Treemap.prototype.getTotalForStack = function(stack) {
+Shearwater.prototype.getTotalForStack = function(stack) {
   var total = 0;
   stack.forEach(function(item) {
     total += item.area;
@@ -63,7 +63,7 @@ Treemap.prototype.getTotalForStack = function(stack) {
   return total;
 };
 
-Treemap.prototype.layoutAndGetWorstRatio = function(stack) {
+Shearwater.prototype.layoutAndGetWorstRatio = function(stack) {
   var self = this;
   var nextCoordinate = this.currentBounds[this.currentLayoutDirection];
   var totalAreaForStack = this.getTotalForStack(stack);
@@ -98,7 +98,7 @@ Treemap.prototype.layoutAndGetWorstRatio = function(stack) {
   return worstRatio;
 };
 
-Treemap.prototype.prepareForNextStack = function(stack) {
+Shearwater.prototype.prepareForNextStack = function(stack) {
   var firstItemInStack = stack[0];
   if (this.currentLayoutDirection === 'y') {
     this.currentBounds.x = firstItemInStack.x + firstItemInStack.width;
@@ -119,7 +119,7 @@ Treemap.prototype.prepareForNextStack = function(stack) {
   }
 };
 
-Treemap.prototype.draw = function(stack) {
+Shearwater.prototype.draw = function(stack) {
   var self = this;
   if (this.innerContainer) {
     this.innerContainer.empty();
@@ -147,7 +147,7 @@ Treemap.prototype.draw = function(stack) {
   this.outerContainer.append(this.innerContainer);
 };
 
-Treemap.prototype.render = function() {
+Shearwater.prototype.render = function() {
   var self = this;
   var allStacks = [];
   var currentStack = [];

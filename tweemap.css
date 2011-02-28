@@ -1,6 +1,6 @@
-/* CSS for Shearwater treemap generator */
+/* CSS for Tweemap treemap generator */
 
-.shearwaterTreemapContainer {
+.tweemapTreemapContainer {
   position: relative;
   border: 2px solid #808080;
   font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
@@ -8,13 +8,13 @@
   color: white;
 }
 
-.shearwaterTreemapArea {
+.tweemapTreemapArea {
   position: absolute;
   overflow: hidden;
   background-color: #808080;
   outline: 1px solid white;
 }
 
-.shearwaterTreemapLabel {
+.tweemapTreemapLabel {
   padding: 5px;
 }

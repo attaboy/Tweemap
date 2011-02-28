@@ -1,4 +1,4 @@
-// Shearwater: a treemap generator v1.0
+// Tweemap: a treemap generator v1.0
 // Written by Luke Andrews <la@twitter.com>
 // Copyright (C) 2011 Twitter, Inc.
 //
@@ -27,7 +27,7 @@
 // JSHint commands:
 /*global $: true */
 
-var Shearwater = function($outerContainer) {
+var Tweemap = function($outerContainer) {
   this.outerContainer = $outerContainer;
   this.data = [];
   this.width = 500;
@@ -37,28 +37,28 @@ var Shearwater = function($outerContainer) {
   return this;
 };
 
-Shearwater.prototype.getColorForIndex = function(i) {
+Tweemap.prototype.getColorForIndex = function(i) {
   return '#808080';
 };
 
-Shearwater.prototype.setColorCallback = function(func) {
+Tweemap.prototype.setColorCallback = function(func) {
   if (typeof func === 'function') {
     this.getColorForIndex = func;
   }
   return this;
 };
 
-Shearwater.prototype.setWidthAndHeight = function(width, height) {
+Tweemap.prototype.setWidthAndHeight = function(width, height) {
   this.width = width;
   this.height = height;
   return this;
 };
 
-Shearwater.prototype.getArea = function() {
+Tweemap.prototype.getArea = function() {
   return this.width * this.height;
 };
 
-Shearwater.prototype.setData = function(data) {
+Tweemap.prototype.setData = function(data) {
   var self = this;
   var total = 0;
   var totalArea = this.getArea();
@@ -77,13 +77,13 @@ Shearwater.prototype.setData = function(data) {
   return this;
 };
 
-Shearwater.prototype.farthestFrom1 = function(a, b) {
+Tweemap.prototype.farthestFrom1 = function(a, b) {
   var aDiff = a < 1 ? 1 - a : a - 1;
   var bDiff = b < 1 ? 1 - b : b - 1;
   return aDiff > bDiff ? a : b;
 };
 
-Shearwater.prototype.getTotalForStack = function(stack) {
+Tweemap.prototype.getTotalForStack = function(stack) {
   var total = 0;
   stack.forEach(function(item) {
     total += item.area;
@@ -91,7 +91,7 @@ Shearwater.prototype.getTotalForStack = function(stack) {
   return total;
 };
 
-Shearwater.prototype.layoutAndGetWorstRatio = function(stack) {
+Tweemap.prototype.layoutAndGetWorstRatio = function(stack) {
   var self = this;
   var nextCoordinate = this.currentBounds[this.currentLayoutDirection];
   var totalAreaForStack = this.getTotalForStack(stack);
@@ -126,7 +126,7 @@ Shearwater.prototype.layoutAndGetWorstRatio = function(stack) {
   return worstRatio;
 };
 
-Shearwater.prototype.prepareForNextStack = function(stack) {
+Tweemap.prototype.prepareForNextStack = function(stack) {
   var firstItemInStack = stack[0];
   if (this.currentLayoutDirection === 'y') {
     this.currentBounds.x = firstItemInStack.x + firstItemInStack.width;
@@ -147,7 +147,7 @@ Shearwater.prototype.prepareForNextStack = function(stack) {
   }
 };
 
-Shearwater.prototype.draw = function(stack) {
+Tweemap.prototype.draw = function(stack) {
   var self = this;
   if (this.innerContainer) {
     this.innerContainer.empty();
@@ -177,7 +177,7 @@ Shearwater.prototype.draw = function(stack) {
   this.outerContainer.append(this.innerContainer);
 };
 
-Shearwater.prototype.render = function() {
+Tweemap.prototype.render = function() {
   var self = this;
   var allStacks = [];
   var currentStack = [];

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shearwater Demo</title>
+  <script src="jquery-1.5.1.min.js"></script>
+  <script src="treemap.js"></script>
+  <link rel="stylesheet" href="treemap.css" type="text/css" media="all" charset="utf-8" />
+</head>
+<body>
+<div id="treemap">
+
+</div>
+<script>
+var data = {
+  'USA': 250,
+  'CAD': 150,
+  'GBR': 120,
+  'AUS': 80,
+  'NZL': 50,
+  'IRE': 50,
+  'IND': 30,
+  'FOO': 20
+};
+
+var map = new Treemap($('#treemap'))
+  .setData(data)
+  .render();
+</script>
+</body>
+</html>

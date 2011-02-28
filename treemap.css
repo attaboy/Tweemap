@@ -1,0 +1,19 @@
+/* CSS for Shearwater treemap generator */
+
+.shearwaterTreemapContainer {
+  position: relative;
+  border: 3px solid black;
+  font-family: Optima;
+}
+
+.shearwaterTreemapArea {
+  position: absolute;
+  overflow: hidden;
+  background-color: #808080;
+  color: white;
+  outline: 1px solid white;
+}
+
+.shearwaterTreemapLabel {
+  padding: 5px;
+}

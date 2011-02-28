@@ -152,17 +152,17 @@ Tweemap.prototype.draw = function(stack) {
   if (this.innerContainer) {
     this.innerContainer.empty();
   } else {
-    this.innerContainer = $('<div class="shearwaterTreemapContainer"/>');
+    this.innerContainer = $('<div class="tweemapTreemapContainer"/>');
   }
   this.innerContainer.css({
     width: this.width + 'px',
     height: this.height + 'px'
   });
   stack.forEach(function(item, i) {
-    var $label = $('<div class="shearwaterTreemapLabel"/>')
+    var $label = $('<div class="tweemapTreemapLabel"/>')
       .append(item.name + ' (' + item.actual + ')');
 
-    item.element = $('<div class="shearwaterTreemapArea"/>')
+    item.element = $('<div class="tweemapTreemapArea"/>')
       .css({
         left: item.x + 'px',
         top: item.y + 'px',

@@ -27,11 +27,13 @@
 // JSHint commands:
 /*global $: true */
 
-var Tweemap = function($outerContainer) {
+var Tweemap = function($outerContainer, parent) {
   this.outerContainer = $outerContainer;
+  this.parent = parent;
   this.data = [];
   this.width = 500;
   this.height = 500;
+  this.childPadding = 5;
   this.currentBounds = { x: 0, y: 0 };
   this.currentLayoutDirection = 'y';
   return this;
@@ -41,10 +43,32 @@ Tweemap.prototype.getColorForIndex = function(i) {
   return '#808080';
 };
 
-Tweemap.prototype.setColorCallback = function(func) {
+Tweemap.prototype.getHoverColorForIndex = function(i) {
+  return '#999';
+};
+
+Tweemap.prototype.setColorMethodCallbackNamed = function(methodName, func, shift) {
   if (typeof func === 'function') {
-    this.getColorForIndex = func;
+    this[methodName] = function(i) {
+      if (shift) {
+        i += shift;
+      }
+      return func(i);
+    };
   }
+  return this;
+};
+
+Tweemap.prototype.setColorCallback = function(func, shift) {
+  return this.setColorMethodCallbackNamed('getColorForIndex', func, shift);
+};
+
+Tweemap.prototype.setHoverColorCallback = function(func, shift) {
+  return this.setColorMethodCallbackNamed('getHoverColorForIndex', func, shift);
+};
+
+Tweemap.prototype.setTop = function(v) {
+  this.top = v;
   return this;
 };
 
@@ -58,12 +82,19 @@ Tweemap.prototype.getArea = function() {
   return this.width * this.height;
 };
 
+Tweemap.prototype.setTotal = function(v) {
+  this.total = v;
+  return this;
+};
+
 Tweemap.prototype.setData = function(data) {
   var self = this;
-  var total = 0;
   var totalArea = this.getArea();
-  data.forEach(function(item) { total += item.value; });
-  if (!total) {
+  if (!this.total) {
+    this.total = 0;
+    data.forEach(function(item) { self.total += item.value; });
+  }
+  if (!this.total) {
     return this;
   }
   this.data = [];
@@ -71,7 +102,8 @@ Tweemap.prototype.setData = function(data) {
     self.data.push({
       name: item.name,
       actual: item.value,
-      area: item.value/total * totalArea
+      area: item.value/self.total * totalArea,
+      children: item.children || []
     });
   });
   return this;
@@ -158,9 +190,18 @@ Tweemap.prototype.draw = function(stack) {
     width: this.width + 'px',
     height: this.height + 'px'
   });
+  if (this.parent) {
+    this.innerContainer.css({
+      top: (this.top ? this.top + this.childPadding : this.childPadding) + 'px',
+      left: this.childPadding + 'px'
+    })
+  }
   stack.forEach(function(item, i) {
-    var $label = $('<div class="tweemapTreemapLabel"/>')
-      .append(item.name + ' (' + item.actual + ')');
+    var labelText = item.name + ' (' + item.actual + ')';
+    var color = self.getColorForIndex(i);
+    var hoverColor = self.getHoverColorForIndex(i);
+    item.label = $('<div class="tweemapTreemapLabel"/>')
+      .append(labelText);
 
     item.element = $('<div class="tweemapTreemapArea"/>')
       .css({
@@ -168,11 +209,21 @@ Tweemap.prototype.draw = function(stack) {
         top: item.y + 'px',
         width: item.width + 'px',
         height: item.height + 'px',
-        background: self.getColorForIndex(i)
-
+        background: color
       })
-      .append($label)
-      .appendTo(self.innerContainer);
+      .attr({ title: labelText })
+      .append(item.label)
+      .appendTo(self.innerContainer)
+      .mouseover(function(e) {
+        e.stopPropagation();
+        item.element.addClass('tweemapTreemapAreaHover').css({ background: hoverColor });
+        item.label.css({ background: hoverColor });
+      })
+      .mouseout(function(e) {
+        e.stopPropagation();
+        item.element.removeClass('tweemapTreemapAreaHover').css({ background: color });
+        item.label.css({ background: '' });
+      });
   });
   this.outerContainer.append(this.innerContainer);
 };
@@ -201,5 +252,18 @@ Tweemap.prototype.render = function() {
     previousWorst = currentWorst;
   });
   this.draw(allStacks);
+  this.data.forEach(function(item) {
+    if (item.children.length > 0) {
+      var labelHeight = item.label.outerHeight();
+      item.childMap = new Tweemap(item.element, self)
+        .setTop(labelHeight)
+        .setWidthAndHeight(item.width - self.childPadding*2 - 1, item.height - self.childPadding*2 - labelHeight - 1)
+        .setTotal(item.actual)
+        .setData(item.children)
+        .setColorCallback(self.getColorForIndex, 1)
+        .setHoverColorCallback(self.getHoverColorForIndex)
+        .render()
+    }
+  });
   return this;
 };

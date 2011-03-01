@@ -2,19 +2,48 @@
 
 .tweemapTreemapContainer {
   position: relative;
-  border: 2px solid #808080;
+  border: 2px solid #CCC;
   font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  font-size: 12px;
   font-weight: 200;
   color: white;
 }
 
+.tweemapTreemapContainer .tweemapTreemapContainer {
+  position: absolute;
+  border: 0;
+  z-index: 1;
+}
+
 .tweemapTreemapArea {
   position: absolute;
-  overflow: hidden;
   background-color: #808080;
   outline: 1px solid white;
+  cursor: pointer;
 }
 
 .tweemapTreemapLabel {
-  padding: 5px;
+  position: absolute;
+  left: 0;
+  right: 1px;
+  background: inherit;
+  padding: 2px 4px;
+  z-index: 2;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tweemapTreemapArea:hover > .tweemapTreemapLabel {
+  overflow: visible;
+  right: auto;
+  outline-width: 1px;
+  -webkit-border-radius: 1em;
+  -moz-border-radius: 1em;
+  border-radius: 1em;
+}
+
+.tweemapTreemapAreaHover {
+  color: black;
+  outline-color: #ebd591;
 }

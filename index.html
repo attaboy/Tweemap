@@ -14,7 +14,20 @@
 var data = [{
   name: 'USA',
   value: 250,
-  children: []
+  children: [{
+    name: 'CA',
+    value: 50,
+    children: [{
+      name: 'San Francisco',
+      value: 10
+    }, {
+      name: 'Los Angeles',
+      value: 14
+    }]
+  }, {
+    name: 'OR',
+    value: 20
+  }]
 }, {
   name: 'CAD',
   value: 150,
@@ -62,6 +75,7 @@ var map = new Tweemap($('#treemap'))
         return '#61CFFE';
     }
   })
+  .setHoverColorCallback(function() { return '#FFECB1'; })
   .render();
 </script>
 </body>

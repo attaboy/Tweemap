@@ -59,6 +59,17 @@ Tweemap.prototype.setHoverColorCallback = function(func, shift) {
   return this.setColorMethodCallbackNamed('getHoverColorForIndex', func, shift);
 };
 
+Tweemap.prototype.getTooltipText = function(name, value) {
+  return name + ': ' + value;
+};
+
+Tweemap.prototype.setTooltipTextCallback = function(func) {
+  if (typeof func === 'function') {
+    this.getTooltipText = func;
+  }
+  return this;
+};
+
 Tweemap.prototype.setTop = function(v) {
   this.top = v;
   return this;
@@ -189,11 +200,10 @@ Tweemap.prototype.draw = function(stack) {
     })
   }
   stack.forEach(function(item, i) {
-    var labelText = item.name + ' (' + item.actual + ')';
     var color = self.getColorForIndex(i);
     var hoverColor = self.getHoverColorForIndex(i);
     item.label = $('<div class="tweemapTreemapLabel"/>')
-      .append(labelText);
+      .append(item.name);
 
     item.element = $('<div class="tweemapTreemapArea"/>')
       .css({
@@ -203,7 +213,7 @@ Tweemap.prototype.draw = function(stack) {
         height: item.height + 'px',
         background: color
       })
-      .attr({ title: labelText })
+      .attr({ title: self.getTooltipText(item.name, item.actual) })
       .append(item.label)
       .appendTo(self.innerContainer)
       .mouseover(function(e) {
@@ -254,6 +264,7 @@ Tweemap.prototype.render = function() {
         .setData(item.children)
         .setColorCallback(self.getColorForIndex, 1)
         .setHoverColorCallback(self.getHoverColorForIndex)
+        .setTooltipTextCallback(self.getTooltipText)
         .render()
     }
   });

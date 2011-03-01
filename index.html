@@ -11,17 +11,50 @@
 
 </div>
 <script>
+function convertCodeToLongName(code) {
+  switch(code) {
+    case 'USA':
+      return 'United States';
+    case 'CA':
+      return 'California';
+    case 'S.F.':
+      return 'San Francisco';
+    case 'L.A.':
+      return 'Los Angeles';
+    case 'OR':
+      return 'Oregon';
+    case 'CAN':
+      return 'Canada';
+    case 'GBR':
+      return 'United Kingdom';
+    case 'AUS':
+      return 'Australia';
+    case 'NZL':
+      return 'New Zealand';
+    case 'IRL':
+      return 'Ireland';
+    case 'IND':
+      return 'India';
+    case 'ZAF':
+      return 'South Africa';
+    default:
+      return code;
+  }
+}
+
 var data = [{
   name: 'USA',
+  longName: 'United States',
   value: 250,
   children: [{
     name: 'CA',
+    longName: 'California',
     value: 50,
     children: [{
-      name: 'San Francisco',
+      name: 'S.F.',
       value: 10
     }, {
-      name: 'Los Angeles',
+      name: 'L.A.',
       value: 14
     }]
   }, {
@@ -29,31 +62,38 @@ var data = [{
     value: 20
   }]
 }, {
-  name: 'CAD',
+  name: 'CAN',
+  longName: 'Canada',
   value: 150,
   children: []
 }, {
   name: 'GBR',
+  longName: 'United Kingdom',
   value: 120,
   children: []
 }, {
   name: 'AUS',
+  longName: 'Australia',
   value: 80,
   children: []
 }, {
   name: 'NZL',
+  longName: 'New Zealand',
   value: 50,
   children: []
 }, {
-  name: 'IRE',
+  name: 'IRL',
+  longName: 'Ireland',
   value: 50,
   children: []
 }, {
   name: 'IND',
+  longName: 'India',
   value: 30,
   children: []
 }, {
-  name: 'FOO',
+  name: 'ZAF',
+  longName: 'South Africa',
   value: 20,
   children: []
 }];
@@ -76,6 +116,9 @@ var map = new Tweemap($('#treemap'))
     }
   })
   .setHoverColorCallback(function() { return '#FFECB1'; })
+  .setTooltipTextCallback(function(name, value) {
+    return convertCodeToLongName(name) + ': ' + value;
+  })
   .render();
 </script>
 </body>

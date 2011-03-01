@@ -119,6 +119,7 @@ var map = new Tweemap($('#treemap'))
   .setTooltipTextCallback(function(name, value) {
     return convertCodeToLongName(name) + ': ' + value;
   })
+  .setClickCallback(function(n,v) { console.log(n,v) })
   .render();
 </script>
 </body>

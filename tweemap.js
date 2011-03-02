@@ -106,7 +106,6 @@ Tweemap.prototype.setTotal = function(v) {
 
 Tweemap.prototype.setData = function(data) {
   var self = this;
-  var totalArea = this.getArea();
   if (!this.total) {
     this.total = 0;
     data.forEach(function(item) { self.total += item.value; });
@@ -119,7 +118,6 @@ Tweemap.prototype.setData = function(data) {
     self.data.push({
       name: item.name,
       actual: item.value,
-      area: item.value/self.total * totalArea,
       children: item.children || []
     });
   });
@@ -254,7 +252,9 @@ Tweemap.prototype.render = function() {
   var currentStack = [];
   var previousWorst = Math.max(this.width, this.height);
   var currentWorst;
+  var totalArea = this.getArea();
   this.data.forEach(function(item, i) {
+    item.area = item.actual/self.total * totalArea,
     currentStack.push(item);
     currentWorst = self.layoutAndGetWorstRatio(currentStack);
     if (i === 0) {

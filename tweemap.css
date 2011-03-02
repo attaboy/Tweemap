@@ -20,6 +20,8 @@
   background-color: #808080;
   outline: 1px solid white;
   cursor: pointer;
+  overflow: hidden;
+  z-index: 0;
 }
 
 .tweemapTreemapLabel {
@@ -45,5 +47,7 @@
 
 .tweemapTreemapAreaHover {
   color: black;
+  overflow: visible;
   outline-color: #ebd591;
+  z-index: 1;
 }

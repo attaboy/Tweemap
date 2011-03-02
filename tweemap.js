@@ -155,7 +155,7 @@ Tweemap.prototype.layoutAndGetWorstRatio = function(stack) {
     item.x = self.currentBounds.x;
     item.y = nextCoordinate;
     item.height = i === stack.length - 1 ? stillAvailable : Math.round(proportionalArea * availableHeight);
-    widthForStack = item.width = widthForStack || Math.round(item.area / item.height);
+    widthForStack = item.width = widthForStack || Math.min(self.width, Math.round(item.area / item.height));
     var ratio = item.height / item.width;
     worstRatio = self.farthestFrom1(ratio, worstRatio);
     nextCoordinate += item.height;
@@ -166,7 +166,7 @@ Tweemap.prototype.layoutAndGetWorstRatio = function(stack) {
     item.x = nextCoordinate;
     item.y = self.currentBounds.y;
     item.width = i === stack.length - 1 ? stillAvailable : Math.round(proportionalArea * availableWidth);
-    heightForStack = item.height = heightForStack || Math.round(item.area / item.width);
+    heightForStack = item.height = heightForStack || Math.min(self.height, Math.round(item.area / item.width));
     var ratio = item.width / item.height;
     worstRatio = self.farthestFrom1(ratio, worstRatio);
     nextCoordinate += item.width;

@@ -22,6 +22,7 @@
 var Tweemap = function($outerContainer, parent) {
   this.outerContainer = $outerContainer;
   this.parent = parent;
+  this.parentName = '';
   this.data = [];
   this.width = 500;
   this.height = 500;
@@ -54,8 +55,8 @@ Tweemap.prototype.setHoverColorCallback = function(func, shift) {
   return this;
 };
 
-Tweemap.prototype.getTooltipText = function(name, value) {
-  return name + ': ' + value;
+Tweemap.prototype.getTooltipText = function(properties) {
+  return properties.name + ': ' + properties.value;
 };
 
 Tweemap.prototype.setTooltipTextCallback = function(func) {
@@ -92,6 +93,11 @@ Tweemap.prototype.setTop = function(v) {
 Tweemap.prototype.setWidthAndHeight = function(width, height) {
   this.width = width;
   this.height = height;
+  return this;
+};
+
+Tweemap.prototype.setParentName = function(v) {
+  this.parentName = v;
   return this;
 };
 
@@ -225,7 +231,14 @@ Tweemap.prototype.draw = function(stack) {
         height: item.height + 'px',
         background: color
       })
-      .attr({ title: self.getTooltipText(item.name, item.actual) })
+      .attr({
+        title: self.getTooltipText({
+          name: item.name,
+          value: item.actual,
+          percentage: item.actual / self.total * 100,
+          parent: self.parentName
+        })
+      })
       .append(item.label)
       .appendTo(self.innerContainer)
       .mouseover(function(e) {
@@ -280,6 +293,7 @@ Tweemap.prototype.render = function() {
         .setWidthAndHeight(item.width - self.childPadding*2 - 1, item.height - self.childPadding*2 - labelHeight - 1)
         .setTotal(item.actual)
         .setData(item.children)
+        .setParentName(item.name)
         .setCallbacksFromParent(self)
         .render()
     }

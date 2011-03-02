@@ -116,8 +116,8 @@ var map = new Tweemap($('#treemap'))
     }
   })
   .setHoverColorCallback(function() { return '#FFECB1'; })
-  .setTooltipTextCallback(function(name, value) {
-    return convertCodeToLongName(name) + ': ' + value;
+  .setTooltipTextCallback(function(properties) {
+    return convertCodeToLongName(properties.name) + ': ' + properties.value;
   })
   .setClickCallback(function(n,v) { console.log(n,v) })
   .render();

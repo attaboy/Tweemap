@@ -133,23 +133,44 @@ Tweemap.prototype.getAreaClasses = function() {
   return this.parent ? this.parent.getAreaClasses() : this.areaClasses;
 };
 
+Tweemap.prototype.computeTotal = function() {
+  var self = this;
+  this.total = 0;
+  this.data.forEach(function(item) {
+    if (item.visible) {
+      self.total += item.actual;
+    }
+  });
+  return this;
+};
+
 Tweemap.prototype.setData = function(data) {
   var self = this;
-  if (!this.total) {
-    this.total = 0;
-    data.forEach(function(item) { self.total += item.value; });
-  }
-  if (!this.total) {
-    return this;
-  }
-  this.data = [];
-  data.forEach(function(item) {
-    self.data.push({
-      name: item.name,
-      actual: item.value,
-      children: item.children || []
-    });
+
+  this.data.forEach(function(item) {
+    item.visible = false; // hide existing data
   });
+
+  data.forEach(function(item) {
+    var existing = self.data.filter(function(ea) { return ea.name === item.name; });
+    if (existing.length > 0) {
+      existing[0].actual = item.value;
+      existing[0].children = item.children || [];
+      existing[0].visible = true;
+    } else {
+      self.data.push({
+        name: item.name,
+        actual: item.value,
+        children: item.children || [],
+        visible: true
+      });
+    }
+  });
+
+  if (!this.total) {
+    this.computeTotal();
+  }
+
   return this;
 };
 
@@ -226,10 +247,8 @@ Tweemap.prototype.prepareForNextStack = function(stack) {
 
 Tweemap.prototype.draw = function(stack) {
   var self = this;
-  if (this.innerContainer) {
-    this.innerContainer.empty();
-  } else {
-    this.innerContainer = $('<div class="tweemapTreemapContainer"/>');
+  if (!this.innerContainer) {
+    this.innerContainer = $('<div class="tweemapTreemapContainer"/>').appendTo(this.outerContainer);
   }
   this.innerContainer.css({
     width: this.width + 'px',
@@ -252,27 +271,45 @@ Tweemap.prototype.draw = function(stack) {
       percentage: item.actual / totalForPercentage * 100,
       parent: self.parentName
     };
-    if (item.name === 'Other') {
-      areaClassNames.push('tweemapTreemapAreaOther');
-    }
-
-    item.label = $('<div class="tweemapTreemapLabel"/>')
-      .append(self.getDisplayName(item.name, self.parentName));
-
-    item.element = $('<div/>')
-      .addClass(areaClassNames.join(' '))
-      .css({
+    var css = item.visible ?
+      {
         left: item.x + 'px',
         top: item.y + 'px',
         width: item.width + 'px',
         height: item.height + 'px',
         background: color
-      })
-      .attr({
-        title: self.getTooltipText(itemAttributes)
-      })
-      .append(item.label)
-      .appendTo(self.innerContainer);
+      } : {
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0
+      }
+
+    if (item.name === 'Other') {
+      areaClassNames.push('tweemapTreemapAreaOther');
+    }
+
+    if (!item.label) {
+      item.label = $('<div class="tweemapTreemapLabel"/>')
+        .append(self.getDisplayName(item.name, self.parentName));
+    }
+
+    if (!item.element) {
+      item.element = $('<div/>')
+        .addClass(areaClassNames.join(' '))
+        .css({
+          width: '0',
+          height: '0',
+          background: color
+        })
+        .attr({
+          title: self.getTooltipText(itemAttributes)
+        })
+        .append(item.label)
+        .appendTo(self.innerContainer);
+    }
+
+    item.element.animate(css, 'fast');
 
     itemAttributes.element = item.element;
 
@@ -294,11 +331,21 @@ Tweemap.prototype.draw = function(stack) {
     };
 
     item.element
-      .mouseover(mouseover)
-      .mouseout(mouseout)
-      .click(click);
+      .unbind('.tweemap')
+      .bind('mouseover.tweemap', mouseover)
+      .bind('mouseout.tweemap', mouseout)
+      .bind('click.tweemap', click);
   });
-  this.outerContainer.append(this.innerContainer);
+};
+
+Tweemap.prototype.hide = function() {
+  this.innerContainer.hide();
+  return this;
+};
+
+Tweemap.prototype.show = function() {
+  this.innerContainer.show();
+  return this;
 };
 
 Tweemap.prototype.render = function() {
@@ -335,16 +382,23 @@ Tweemap.prototype.render = function() {
       var width = item.width - self.childPadding*2 - 1;
       var height = item.height - self.childPadding*2 - labelHeight - 1;
       if (width < 5 || height < 5) {
+        if (item.childMap) {
+          item.childMap.hide();
+        }
         return; // don't render children if there's no room
       }
-      item.childMap = new Tweemap(item.element, self)
-        .setTop(labelHeight)
-        .setWidthAndHeight(width, height)
+      if (!item.childMap) {
+        item.childMap = new Tweemap(item.element, self)
+          .setTop(labelHeight)
+          .setWidthAndHeight(width, height)
+          .setParentName(item.name)
+          .setCallbacksFromParent(self)
+      }
+      item.childMap
         .setTotal(item.actual)
         .setData(item.children)
-        .setParentName(item.name)
-        .setCallbacksFromParent(self)
         .render()
+        .show()
     }
   });
   return this;

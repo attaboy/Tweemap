@@ -10,6 +10,10 @@
 <div id="treemap">
 
 </div>
+
+<br /><br />
+
+<input type="button" value="Start" id="start" /> <input type="button" value="Stop" id="stop" disabled="disabled" />
 <script>
 function convertCodeToLongName(code) {
   switch(code) {
@@ -121,6 +125,43 @@ var map = new Tweemap($('#treemap'))
   })
   .setClickCallback(function(n,v) { console.log(n,v) })
   .render();
+
+var active = true;
+
+function adjustOnTheFly() {
+  data.forEach(function(ea) {
+    var flipACoin = Math.random() > 0.5 ? 1 : -1;
+    ea.value += flipACoin * Math.round(Math.random()*15);
+    if (ea.value < 0) {
+      ea.value = 1;
+    }
+  })
+  window.setTimeout(function() {
+    map
+      .setData(data)
+      .computeTotal()
+      .render();
+    if (active) {
+      adjustOnTheFly();
+    }
+  }, 1000)
+}
+
+var $start = $('#start');
+var $stop = $('#stop');
+
+$start.click(function() {
+  active = true;
+  adjustOnTheFly();
+  $stop.attr('disabled', '');
+  $start.attr('disabled', 'disabled')
+})
+$stop.click(function() {
+  active = false;
+  $start.attr('disabled', '');
+  $stop.attr('disabled', 'disabled');
+})
+
 </script>
 </body>
 </html>

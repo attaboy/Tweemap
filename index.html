@@ -101,7 +101,7 @@ var data = [{
 var map = new Tweemap($('#treemap'))
   .setData(data)
   .setWidthAndHeight(500, 500)
-  .setColorCallback(function(i) {
+  .setColorCallback(function(name, i) {
     switch (i % 5) {
       case 0:
         return '#0B648A';

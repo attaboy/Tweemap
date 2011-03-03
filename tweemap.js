@@ -24,16 +24,15 @@ var Tweemap = function($outerContainer, parent) {
   this.parent = parent;
   this.parentName = '';
   this.data = [];
+  this.areaClasses = [];
   this.width = 500;
   this.height = 500;
   this.childPadding = 5;
-  this.currentBounds = { x: 0, y: 0 };
-  this.currentLayoutDirection = 'y';
   this.shiftColorIndex = parent ? parent.shiftColorIndex + 1 : 0;
   return this;
 };
 
-Tweemap.prototype.getColor = function(i) {
+Tweemap.prototype.getColor = function(name, i) {
   return '#808080';
 };
 
@@ -77,9 +76,20 @@ Tweemap.prototype.setClickCallback = function(func) {
   return this;
 };
 
+Tweemap.prototype.getDisplayName = function(name, parentName) {
+  return name;
+};
+
+Tweemap.prototype.setDisplayNameCallback = function(func) {
+  if (typeof func === 'function') {
+    this.getDisplayName = func;
+  }
+  return this;
+};
+
 Tweemap.prototype.setCallbacksFromParent = function(parent) {
   var self = this;
-  ['Color', 'HoverColor', 'TooltipText', 'Click'].forEach(function(callbackSuffix) {
+  ['Color', 'HoverColor', 'TooltipText', 'Click', 'DisplayName'].forEach(function(callbackSuffix) {
     self['set'+callbackSuffix+'Callback'](parent['get'+callbackSuffix]);
   });
   return this;
@@ -108,6 +118,19 @@ Tweemap.prototype.getArea = function() {
 Tweemap.prototype.setTotal = function(v) {
   this.total = v;
   return this;
+};
+
+Tweemap.prototype.getTotalForPercentage = function() {
+  return this.parent ? this.parent.getTotalForPercentage() : this.total;
+};
+
+Tweemap.prototype.addAreaClass = function(v) {
+  this.areaClasses.push(v);
+  return this;
+};
+
+Tweemap.prototype.getAreaClasses = function() {
+  return this.parent ? this.parent.getAreaClasses() : this.areaClasses;
 };
 
 Tweemap.prototype.setData = function(data) {
@@ -158,9 +181,10 @@ Tweemap.prototype.layoutAndGetWorstRatio = function(stack) {
     var stillAvailable = self.height - nextCoordinate;
     item.x = self.currentBounds.x;
     item.y = nextCoordinate;
-    item.height = i === stack.length - 1 ? stillAvailable : Math.round(proportionalArea * availableHeight);
-    widthForStack = item.width = widthForStack || Math.min(self.width, Math.round(item.area / item.height));
-    var ratio = item.height / item.width;
+    item.height = i === stack.length - 1 ? stillAvailable : Math.max(Math.round(proportionalArea * availableHeight), 1);
+    item.width = widthForStack || Math.min(self.width, Math.round(item.area / item.height));
+    widthForStack = item.width;
+    var ratio = Math.max(item.height, item.width) / Math.min(item.height, item.width);
     worstRatio = self.farthestFrom1(ratio, worstRatio);
     nextCoordinate += item.height;
   };
@@ -169,9 +193,9 @@ Tweemap.prototype.layoutAndGetWorstRatio = function(stack) {
     var stillAvailable = self.width - nextCoordinate;
     item.x = nextCoordinate;
     item.y = self.currentBounds.y;
-    item.width = i === stack.length - 1 ? stillAvailable : Math.round(proportionalArea * availableWidth);
+    item.width = i === stack.length - 1 ? stillAvailable : Math.max(Math.round(proportionalArea * availableWidth), 1);
     heightForStack = item.height = heightForStack || Math.min(self.height, Math.round(item.area / item.width));
-    var ratio = item.width / item.height;
+    var ratio = Math.max(item.height, item.width) / Math.min(item.height, item.width);
     worstRatio = self.farthestFrom1(ratio, worstRatio);
     nextCoordinate += item.width;
   };
@@ -218,12 +242,25 @@ Tweemap.prototype.draw = function(stack) {
     })
   }
   stack.forEach(function(item, i) {
-    var color = self.getColor(i + self.shiftColorIndex);
+    var color = self.getColor(item.name, i + self.shiftColorIndex);
     var hoverColor = self.getHoverColor(i + self.shiftColorIndex);
-    item.label = $('<div class="tweemapTreemapLabel"/>')
-      .append(item.name);
+    var totalForPercentage = self.getTotalForPercentage();
+    var areaClassNames = ['tweemapTreemapArea'].concat(self.getAreaClasses());
+    var itemAttributes = {
+      name: item.name,
+      value: item.actual,
+      percentage: item.actual / totalForPercentage * 100,
+      parent: self.parentName
+    };
+    if (item.name === 'Other') {
+      areaClassNames.push('tweemapTreemapAreaOther');
+    }
 
-    item.element = $('<div class="tweemapTreemapArea"/>')
+    item.label = $('<div class="tweemapTreemapLabel"/>')
+      .append(self.getDisplayName(item.name, self.parentName));
+
+    item.element = $('<div/>')
+      .addClass(areaClassNames.join(' '))
       .css({
         left: item.x + 'px',
         top: item.y + 'px',
@@ -232,29 +269,34 @@ Tweemap.prototype.draw = function(stack) {
         background: color
       })
       .attr({
-        title: self.getTooltipText({
-          name: item.name,
-          value: item.actual,
-          percentage: item.actual / self.total * 100,
-          parent: self.parentName
-        })
+        title: self.getTooltipText(itemAttributes)
       })
       .append(item.label)
-      .appendTo(self.innerContainer)
-      .mouseover(function(e) {
-        e.stopPropagation();
+      .appendTo(self.innerContainer);
+
+    itemAttributes.element = item.element;
+
+    var mouseover = function(e) {
+      if (!item.element.find('.tweemapTreemapAreaHover').length) {
         item.element.addClass('tweemapTreemapAreaHover').css({ background: hoverColor });
         item.label.css({ background: hoverColor });
-      })
-      .mouseout(function(e) {
-        e.stopPropagation();
-        item.element.removeClass('tweemapTreemapAreaHover').css({ background: color });
-        item.label.css({ background: '' });
-      })
-      .click(function(e) {
-        e.stopPropagation();
-        self.getClick(item.name, item.actual);
-      });
+      }
+    };
+
+    var mouseout = function(e) {
+      item.element.removeClass('tweemapTreemapAreaHover').css({ background: color });
+      item.label.css({ background: '' });
+    };
+
+    var click = function(e) {
+      e.stopPropagation();
+      self.getClick(itemAttributes);
+    };
+
+    item.element
+      .mouseover(mouseover)
+      .mouseout(mouseout)
+      .click(click);
   });
   this.outerContainer.append(this.innerContainer);
 };
@@ -266,15 +308,14 @@ Tweemap.prototype.render = function() {
   var previousWorst = Math.max(this.width, this.height);
   var currentWorst;
   var totalArea = this.getArea();
+  this.currentBounds = { x: 0, y: 0 };
+  this.currentLayoutDirection = 'y';
+
   this.data.forEach(function(item, i) {
     item.area = item.actual/self.total * totalArea,
     currentStack.push(item);
     currentWorst = self.layoutAndGetWorstRatio(currentStack);
-    if (i === 0) {
-      currentWorst = self.layoutAndGetWorstRatio(currentStack);
-    } else if (i === self.data.length - 1) {
-      allStacks = allStacks.concat(currentStack);
-    } else if (self.farthestFrom1(currentWorst, previousWorst) === currentWorst) {
+    if (i > 0 && self.farthestFrom1(currentWorst, previousWorst) === currentWorst) {
       currentStack.pop();
       self.layoutAndGetWorstRatio(currentStack);
       allStacks = allStacks.concat(currentStack);
@@ -282,15 +323,23 @@ Tweemap.prototype.render = function() {
       currentStack = [item];
       currentWorst = self.layoutAndGetWorstRatio(currentStack);
     }
+    if (i === self.data.length - 1) {
+      allStacks = allStacks.concat(currentStack);
+    }
     previousWorst = currentWorst;
   });
   this.draw(allStacks);
   this.data.forEach(function(item) {
     if (item.children.length > 0) {
       var labelHeight = item.label.outerHeight();
+      var width = item.width - self.childPadding*2 - 1;
+      var height = item.height - self.childPadding*2 - labelHeight - 1;
+      if (width < 5 || height < 5) {
+        return; // don't render children if there's no room
+      }
       item.childMap = new Tweemap(item.element, self)
         .setTop(labelHeight)
-        .setWidthAndHeight(item.width - self.childPadding*2 - 1, item.height - self.childPadding*2 - labelHeight - 1)
+        .setWidthAndHeight(width, height)
         .setTotal(item.actual)
         .setData(item.children)
         .setParentName(item.name)

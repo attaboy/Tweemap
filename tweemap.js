@@ -260,11 +260,11 @@ Tweemap.prototype.draw = function(stack) {
       left: this.childPadding + 'px'
     })
   }
+  var totalForPercentage = self.getTotalForPercentage();
+  var areaClassNames = ['tweemapTreemapArea'].concat(self.getAreaClasses());
   stack.forEach(function(item, i) {
     var color = self.getColor(item.name, i + self.shiftColorIndex);
     var hoverColor = self.getHoverColor(i + self.shiftColorIndex);
-    var totalForPercentage = self.getTotalForPercentage();
-    var areaClassNames = ['tweemapTreemapArea'].concat(self.getAreaClasses());
     var itemAttributes = {
       name: item.name,
       value: item.actual,
@@ -279,11 +279,11 @@ Tweemap.prototype.draw = function(stack) {
         height: item.height + 'px',
         background: color
       } : {
-        left: 0,
-        top: 0,
-        width: 0,
-        height: 0
-      }
+        left: '0',
+        top: '0',
+        width: '0',
+        height: '0'
+      };
 
     if (item.name === 'Other') {
       areaClassNames.push('tweemapTreemapAreaOther');
@@ -302,14 +302,20 @@ Tweemap.prototype.draw = function(stack) {
           height: '0',
           background: color
         })
-        .attr({
-          title: self.getTooltipText(itemAttributes)
-        })
         .append(item.label)
         .appendTo(self.innerContainer);
     }
 
-    item.element.animate(css, 'fast');
+    item.element
+      .attr({
+        title: self.getTooltipText(itemAttributes)
+      })
+      .show()
+      .animate(css, 'fast', function() {
+        if (!item.visible) {
+          item.element.hide();
+        }
+      });
 
     itemAttributes.element = item.element;
 
@@ -348,6 +354,18 @@ Tweemap.prototype.show = function() {
   return this;
 };
 
+Tweemap.prototype.getHiddenData = function() {
+  return this.data.filter(function(item) {
+    return !item.visible;
+  });
+};
+
+Tweemap.prototype.getVisibleData = function() {
+  return this.data.filter(function(item) {
+    return item.visible;
+  });
+};
+
 Tweemap.prototype.render = function() {
   var self = this;
   var allStacks = [];
@@ -358,7 +376,10 @@ Tweemap.prototype.render = function() {
   this.currentBounds = { x: 0, y: 0 };
   this.currentLayoutDirection = 'y';
 
-  this.data.forEach(function(item, i) {
+  allStacks = allStacks.concat(this.getHiddenData());
+
+  var visibleData = this.getVisibleData();
+  visibleData.forEach(function(item, i) {
     item.area = item.actual/self.total * totalArea,
     currentStack.push(item);
     currentWorst = self.layoutAndGetWorstRatio(currentStack);
@@ -370,13 +391,13 @@ Tweemap.prototype.render = function() {
       currentStack = [item];
       currentWorst = self.layoutAndGetWorstRatio(currentStack);
     }
-    if (i === self.data.length - 1) {
+    if (i === visibleData.length - 1) {
       allStacks = allStacks.concat(currentStack);
     }
     previousWorst = currentWorst;
   });
   this.draw(allStacks);
-  this.data.forEach(function(item) {
+  visibleData.forEach(function(item) {
     if (item.children.length > 0) {
       var labelHeight = item.label.outerHeight();
       var width = item.width - self.childPadding*2 - 1;
@@ -389,16 +410,18 @@ Tweemap.prototype.render = function() {
       }
       if (!item.childMap) {
         item.childMap = new Tweemap(item.element, self)
-          .setTop(labelHeight)
-          .setWidthAndHeight(width, height)
-          .setParentName(item.name)
-          .setCallbacksFromParent(self)
+          .setParentName(item.name);
       }
       item.childMap
+        .setCallbacksFromParent(self)
+        .setTop(labelHeight)
+        .setWidthAndHeight(width, height)
         .setTotal(item.actual)
         .setData(item.children)
         .render()
-        .show()
+        .show();
+    } else if (item.childMap) {
+      item.childMap.hide();
     }
   });
   return this;

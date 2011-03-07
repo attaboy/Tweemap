@@ -261,10 +261,10 @@ Tweemap.prototype.draw = function(stack) {
     })
   }
   var totalForPercentage = self.getTotalForPercentage();
-  var areaClassNames = ['tweemapTreemapArea'].concat(self.getAreaClasses());
   stack.forEach(function(item, i) {
     var color = self.getColor(item.name, i + self.shiftColorIndex);
     var hoverColor = self.getHoverColor(i + self.shiftColorIndex);
+    var areaClassNames = ['tweemapTreemapArea'].concat(self.getAreaClasses());
     var itemAttributes = {
       name: item.name,
       value: item.actual,

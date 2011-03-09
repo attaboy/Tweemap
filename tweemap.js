@@ -93,7 +93,7 @@ Tweemap.prototype.setCallbacksFromParent = function(parent) {
     self['set'+callbackSuffix+'Callback'](parent['get'+callbackSuffix]);
   });
   return this;
-}
+};
 
 Tweemap.prototype.setTop = function(v) {
   this.top = v;
@@ -258,7 +258,7 @@ Tweemap.prototype.draw = function(stack) {
     this.innerContainer.css({
       top: (this.top ? this.top + this.childPadding : this.childPadding) + 'px',
       left: this.childPadding + 'px'
-    })
+    });
   }
   var totalForPercentage = self.getTotalForPercentage();
   stack.forEach(function(item, i) {
@@ -380,7 +380,7 @@ Tweemap.prototype.render = function() {
 
   var visibleData = this.getVisibleData();
   visibleData.forEach(function(item, i) {
-    item.area = item.actual/self.total * totalArea,
+    item.area = item.actual/self.total * totalArea;
     currentStack.push(item);
     currentWorst = self.layoutAndGetWorstRatio(currentStack);
     if (i > 0 && self.farthestFrom1(currentWorst, previousWorst) === currentWorst) {

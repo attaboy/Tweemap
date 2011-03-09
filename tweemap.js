@@ -23,20 +23,21 @@ var Tweemap = function($outerContainer, parent) {
   this.outerContainer = $outerContainer;
   this.parent = parent;
   this.parentName = '';
+  this.parentColor = '';
   this.data = [];
   this.areaClasses = [];
   this.width = 500;
   this.height = 500;
   this.childPadding = 5;
-  this.shiftColorIndex = parent ? parent.shiftColorIndex + 1 : 0;
+  this.shiftColorIndex = 0;
   return this;
 };
 
-Tweemap.prototype.getColor = function(name, i) {
+Tweemap.prototype.getColor = function(name, i, notColor) {
   return '#808080';
 };
 
-Tweemap.prototype.getHoverColor = function(i) {
+Tweemap.prototype.getHoverColor = function() {
   return '#999';
 };
 
@@ -108,6 +109,11 @@ Tweemap.prototype.setWidthAndHeight = function(width, height) {
 
 Tweemap.prototype.setParentName = function(v) {
   this.parentName = v;
+  return this;
+};
+
+Tweemap.prototype.setParentColor = function(v) {
+  this.parentColor = v;
   return this;
 };
 
@@ -188,43 +194,63 @@ Tweemap.prototype.getTotalForStack = function(stack) {
   return total;
 };
 
-Tweemap.prototype.layoutAndGetWorstRatio = function(stack) {
+Tweemap.prototype.layoutAndGetWorstRatio = function(stack, shouldChooseBestLayout, shouldFillAvailableSpace) {
   var self = this;
-  var nextCoordinate = this.currentBounds[this.currentLayoutDirection];
+  var nextXCoordinate = this.currentBounds.x;
+  var nextYCoordinate = this.currentBounds.y;
   var totalAreaForStack = this.getTotalForStack(stack);
   var worstRatio = 1;
-  var availableHeight = self.height - nextCoordinate;
-  var availableWidth = self.width - nextCoordinate;
+  var availableHeight = self.height - nextYCoordinate;
+  var availableWidth = self.width - nextXCoordinate;
   var widthForStack;
   var heightForStack;
-  var calculateHeight = function(item, i) {
+
+  var calculateBest = function(item, i) {
+    var isLastItem = i === stack.length - 1;
     var proportionalArea = item.area / totalAreaForStack;
-    var stillAvailable = self.height - nextCoordinate;
-    item.x = self.currentBounds.x;
-    item.y = nextCoordinate;
-    item.height = i === stack.length - 1 ? stillAvailable : Math.max(Math.round(proportionalArea * availableHeight), 1);
-    item.width = widthForStack || Math.min(self.width, Math.round(item.area / item.height));
-    widthForStack = item.width;
-    var ratio = Math.max(item.height, item.width) / Math.min(item.height, item.width);
-    worstRatio = self.farthestFrom1(ratio, worstRatio);
-    nextCoordinate += item.height;
+    var widthStillAvailable = self.width - nextXCoordinate;
+    var heightStillAvailable = self.height - nextYCoordinate;
+    var widthPrimary, heightPrimary, widthSecondary, heightSecondary;
+    if (isLastItem) {
+      widthPrimary = widthStillAvailable;
+      heightPrimary = heightStillAvailable;
+    } else {
+      widthPrimary = Math.max(Math.round(proportionalArea * availableWidth), 1);
+      heightPrimary = Math.max(Math.round(proportionalArea * availableHeight), 1);
+    }
+    if (shouldChooseBestLayout && shouldFillAvailableSpace) {
+      widthSecondary = widthStillAvailable;
+      heightSecondary = heightStillAvailable;
+    } else {
+      widthSecondary = widthForStack || Math.min(widthStillAvailable, Math.round(item.area / heightPrimary));
+      heightSecondary = heightForStack || Math.min(heightStillAvailable, Math.round(item.area / widthPrimary));
+    }
+    var ratioForWidthAsPrimary = Math.max(widthPrimary, heightSecondary) / Math.min(widthPrimary, heightSecondary);
+    var ratioForHeightAsPrimary = Math.max(heightPrimary, widthSecondary) / Math.min(heightPrimary, widthSecondary);
+    item.x = nextXCoordinate;
+    item.y = nextYCoordinate;
+    var chooseBest = i === 0 && shouldChooseBestLayout;
+    if (chooseBest && ratioForWidthAsPrimary < ratioForHeightAsPrimary || !chooseBest && self.currentLayoutDirection === 'x') {
+      self.currentLayoutDirection = 'x';
+      item.width = widthPrimary;
+      heightForStack = item.height = heightSecondary;
+      worstRatio = self.farthestFrom1(ratioForWidthAsPrimary, worstRatio);
+      nextXCoordinate += item.width;
+    } else {
+      self.currentLayoutDirection = 'y';
+      widthForStack = item.width = widthSecondary;
+      item.height = heightPrimary;
+      worstRatio = self.farthestFrom1(ratioForHeightAsPrimary, worstRatio);
+      nextYCoordinate += item.height;
+    }
   };
-  var calculateWidth = function(item, i) {
-    var proportionalArea = item.area / totalAreaForStack;
-    var stillAvailable = self.width - nextCoordinate;
-    item.x = nextCoordinate;
-    item.y = self.currentBounds.y;
-    item.width = i === stack.length - 1 ? stillAvailable : Math.max(Math.round(proportionalArea * availableWidth), 1);
-    heightForStack = item.height = heightForStack || Math.min(self.height, Math.round(item.area / item.width));
-    var ratio = Math.max(item.height, item.width) / Math.min(item.height, item.width);
-    worstRatio = self.farthestFrom1(ratio, worstRatio);
-    nextCoordinate += item.width;
-  };
-  stack.forEach(this.currentLayoutDirection === 'x' ? calculateWidth : calculateHeight);
+
+  stack.forEach(calculateBest);
   return worstRatio;
 };
 
 Tweemap.prototype.prepareForNextStack = function(stack) {
+  this.shiftColorIndex += 1;
   var firstItemInStack = stack[0];
   if (this.currentLayoutDirection === 'y') {
     this.currentBounds.x = firstItemInStack.x + firstItemInStack.width;
@@ -233,12 +259,12 @@ Tweemap.prototype.prepareForNextStack = function(stack) {
     this.currentBounds.x = firstItemInStack.x;
     this.currentBounds.y = firstItemInStack.y + firstItemInStack.height;
   }
-  // alternate between x and y layout unless the remaining space has more than 4:1 ratio
+  // alternate between x and y layout unless the remaining space has more than 3:1 ratio
   var remainingX = this.width - this.currentBounds.x;
   var remainingY = this.height - this.currentBounds.y;
-  if (remainingX > remainingY * 4) {
+  if (remainingX > remainingY * 3) {
     this.currentLayoutDirection = 'x';
-  } else if (remainingY > remainingX * 4) {
+  } else if (remainingY > remainingX * 3) {
     this.currentLayoutDirection = 'y';
   } else {
     this.currentLayoutDirection = this.currentLayoutDirection === 'x' ? 'y' : 'x';
@@ -262,8 +288,8 @@ Tweemap.prototype.draw = function(stack) {
   }
   var totalForPercentage = self.getTotalForPercentage();
   stack.forEach(function(item, i) {
-    var color = self.getColor(item.name, i + self.shiftColorIndex);
-    var hoverColor = self.getHoverColor(i + self.shiftColorIndex);
+    var color = self.getColor(item.name, i + self.shiftColorIndex, self.parentColor);
+    var hoverColor = self.getHoverColor();
     var areaClassNames = ['tweemapTreemapArea'].concat(self.getAreaClasses());
     var itemAttributes = {
       name: item.name,
@@ -271,19 +297,24 @@ Tweemap.prototype.draw = function(stack) {
       percentage: item.actual / totalForPercentage * 100,
       parent: self.parentName
     };
-    var css = item.visible ?
-      {
+    var css;
+    if (item.visible) {
+      item.color = item.color || color;
+      css = {
         left: item.x + 'px',
         top: item.y + 'px',
         width: item.width + 'px',
         height: item.height + 'px',
-        background: color
-      } : {
+        background: item.color
+      };
+    } else {
+      css = {
         left: '0',
         top: '0',
         width: '0',
         height: '0'
       };
+    }
 
     if (item.name === 'Other') {
       areaClassNames.push('tweemapTreemapAreaOther');
@@ -327,7 +358,7 @@ Tweemap.prototype.draw = function(stack) {
     };
 
     var mouseout = function(e) {
-      item.element.removeClass('tweemapTreemapAreaHover').css({ background: color });
+      item.element.removeClass('tweemapTreemapAreaHover').css({ background: item.color });
       item.label.css({ background: '' });
     };
 
@@ -379,7 +410,9 @@ Tweemap.prototype.render = function() {
   allStacks = allStacks.concat(this.getHiddenData());
 
   var visibleData = this.getVisibleData();
+  var shouldFillAvailableSpace = !this.parent;
   visibleData.forEach(function(item, i) {
+    var isLastItem = (i === visibleData.length - 1);
     item.area = item.actual/self.total * totalArea;
     currentStack.push(item);
     currentWorst = self.layoutAndGetWorstRatio(currentStack);
@@ -389,9 +422,9 @@ Tweemap.prototype.render = function() {
       allStacks = allStacks.concat(currentStack);
       self.prepareForNextStack(currentStack);
       currentStack = [item];
-      currentWorst = self.layoutAndGetWorstRatio(currentStack);
+      currentWorst = self.layoutAndGetWorstRatio(currentStack, isLastItem, shouldFillAvailableSpace);
     }
-    if (i === visibleData.length - 1) {
+    if (isLastItem) {
       allStacks = allStacks.concat(currentStack);
     }
     previousWorst = currentWorst;
@@ -410,7 +443,8 @@ Tweemap.prototype.render = function() {
       }
       if (!item.childMap) {
         item.childMap = new Tweemap(item.element, self)
-          .setParentName(item.name);
+          .setParentName(item.name)
+          .setParentColor(item.color);
       }
       item.childMap
         .setCallbacksFromParent(self)

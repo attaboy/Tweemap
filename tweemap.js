@@ -304,8 +304,7 @@ Tweemap.prototype.draw = function(stack) {
         left: item.x + 'px',
         top: item.y + 'px',
         width: item.width + 'px',
-        height: item.height + 'px',
-        background: item.color
+        height: item.height + 'px'
       };
     } else {
       css = {
@@ -331,7 +330,7 @@ Tweemap.prototype.draw = function(stack) {
         .css({
           width: '0',
           height: '0',
-          background: color
+          background: item.color
         })
         .append(item.label)
         .appendTo(self.innerContainer);
@@ -340,6 +339,9 @@ Tweemap.prototype.draw = function(stack) {
     item.element
       .attr({
         title: self.getTooltipText(itemAttributes)
+      })
+      .css({
+        background: item.color
       })
       .show()
       .animate(css, 'fast', function() {
